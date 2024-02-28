@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle Financeiro</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh; /* Isso centraliza o conteúdo verticalmente */
+    }
+
+    main {
+      width: 90%; /* Alterado para 90% da largura da tela */
+      max-width: 1000px; /* Máximo de 1000px */
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      position: relative; /* Permite posicionar o botão de volta */
+    }
+
+    .resume {
+      margin-bottom: 30px;
+    }
+
+    .resume div {
+      margin-bottom: 30px;
+    }
+
+    .newItem .divDesc,
+    .newItem .divAmount,
+    .newItem .divType {
+      flex: 2; /* Aumentando o tamanho dos campos de entrada */
+      margin-right: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 45px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    button#btnBack {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .divTable {
+      overflow-x: auto;
+      width: 100%; /* Ocupa toda a largura disponível */
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th.columnAmount,
+    th.columnType {
+      width: 40%; /* Ajustando a largura das colunas */
+    }
+
+    th.columnAction {
+      width: 25%; /* Ajustando a largura da coluna de ação */
+    }
+  </style>
+
+</head>
+<body>
+
+  <main>
+    <button id="btnBack" onclick="window.location.href = 'index.html'">Voltar</button>
+
+    <div class="resume">
+      <div>
+        Entradas: R$
+        <span class="incomes">0.00</span>
+      </div>
+      <div>
+        Saídas: R$
+        <span class="expenses">0.00</span>
+      </div>
+      <div>
+        Total: R$
+        <span class="total">0.00</span>
+      </div>
+    </div>
+    <div class="newItem">
+      <div class="divDesc">
+        <label for="desc">Descrição</label>
+        <input type="text" id="desc" placeholder="Descrição" style="width: 100%; min-width: 300px;">
+      </div>
+      <div class="divAmount">
+        <label for="amount">Valor</label>
+        <input type="number" id="amount" placeholder="0.00">
+      </div>
+      <div class="divType">
+        <label for="type">Tipo</label>
+        <select id="type">
+          <option>Entrada</option>
+          <option>Saída</option>
+        </select>
+      </div>
+      <button id="btnNew">Incluir</button>
+    </div>
+    <div class="divTable">
+      <table>
+        <thead>
+          <tr>
+            <th>Descrição</th>
+            <th class="columnAmount">Valor</th>
+            <th class="columnType">Tipo</th>
+            <th class="columnAction"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Placeholder rows for demonstration -->
+          <tr>
+            <td>Aluguel</td>
+            <td class="columnAmount">500.00</td>
+            <td class="columnType">Saída</td>
+            <td class="columnAction"><button>Delete</button></td>
+          </tr>
+          <tr>
+            <td>Salário</td>
+            <td class="columnAmount">2000.00</td>
+            <td class="columnType">Entrada</td>
+            <td class="columnAction"><button>Delete</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const tbody = document.querySelector("tbody");
+    const descItem = document.querySelector("#desc");
+    const amount = document.querySelector("#amount");
+    const type = document.querySelector("#type");
+    const btnNew = document.querySelector("#btnNew");
+
+    const incomes = document.querySelector(".incomes");
+    const expenses = document.querySelector(".expenses");
+    const total = document.querySelector(".total");
+
+    let items;
+
+    btnNew.onclick = () => {
+      if (descItem.value === "" || amount.value === "" || type.value === "") {
+        return alert("Preencha todos os campos!");
+      }
+
+      items.push({
+        desc: descItem.value,
+        amount: Math.abs(amount.value).toFixed(2),
+        type: type.value,
+      });
+
+      setItensBD();
+
+      loadItens();
+
+      descItem.value = "";
+      amount.value = "";
+    };
+
+    function deleteItem(index) {
+      items.splice(index, 1);
+      setItensBD();
+      loadItens();
+    }
+
+    function insertItem(item, index) {
+      let tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${item.desc}</td>
+        <td>R$ ${item.amount}</td>
+        <td class="columnType">${
+          item.type === "Entrada"
+            ? '<i class="bx bxs-chevron-up-circle"></i>'
+            : '<i class="bx bxs-chevron-down-circle"></i>'
+        }</td>
+        <td class="columnAction">
+          <button onclick="deleteItem(${index})"><i class='bx bx-trash'></i></button>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+    }
+
+    function loadItens() {
+      items = getItensBD();
+      tbody.innerHTML = "";
+      items.forEach((item, index) => {
+        insertItem(item, index);
+      });
+
+      getTotals();
+    }
+
+    function getTotals() {
+      const amountIncomes = items
+        .filter((item) => item.type === "Entrada")
+        .map((transaction) => Number(transaction.amount));
+
+      const amountExpenses = items
+        .filter((item) => item.type === "Saída")
+        .map((transaction) => Number(transaction.amount));
+
+      const totalIncomes = amountIncomes
+        .reduce((acc, cur) => acc + cur, 0)
+        .toFixed(2);
+
+      const totalExpenses = Math.abs(
+        amountExpenses.reduce((acc, cur) => acc + cur, 0)
+      ).toFixed(2);
+
+      const totalItems = (totalIncomes - totalExpenses).toFixed(2);
+
+      incomes.innerHTML = totalIncomes;
+      expenses.innerHTML = totalExpenses;
+      total.innerHTML = totalItems;
+    }
+
+    const getItensBD = () => JSON.parse(localStorage.getItem("db_items")) ?? [];
+    const setItensBD = () =>
+      localStorage.setItem("db_items", JSON.stringify(items));
+
+    loadItens();
+  </script>
+</body>
+</html>
